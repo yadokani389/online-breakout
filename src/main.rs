@@ -1,3 +1,9 @@
+use bevy::prelude::*;
+
+pub mod game;
+
 fn main() {
-    println!("Hello, world!");
+    App::new()
+        .add_plugins((DefaultPlugins, game::GamePlugin))
+        .run();
 }
