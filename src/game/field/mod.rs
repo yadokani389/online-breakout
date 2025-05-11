@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use super::Team;
+
 pub struct FieldPlugin;
 
 impl Plugin for FieldPlugin {
@@ -18,7 +20,6 @@ pub struct Wall {
 #[derive(Component)]
 pub struct Cell {
     pub half_size: Vec2,
-    pub team: u8,
 }
 
 #[derive(Event)]
@@ -39,8 +40,8 @@ fn setup_field(mut commands: Commands) {
                 commands.spawn((
                     Cell {
                         half_size: Vec2::splat(cell_size / 2.),
-                        team: i,
                     },
+                    Team(i),
                     Sprite::from_color(
                         Color::hsl(180. * i as f32, 0.6, 0.7),
                         Vec2::splat(cell_size),
@@ -106,17 +107,17 @@ fn setup_field(mut commands: Commands) {
 }
 
 fn toggle_cell(
-    mut q_cell: Query<(Entity, &Children, &mut Cell, &mut Sprite)>,
+    mut q_cell: Query<(Entity, &Children, &mut Team, &mut Sprite), With<Cell>>,
     mut q_child: Query<&mut Sprite, Without<Cell>>,
     mut q_click: EventReader<CellClicked>,
 ) {
     for event in q_click.read() {
-        if let Ok((_, children, mut cell, mut sprite)) = q_cell.get_mut(event.cell) {
-            cell.team = 1 - cell.team;
-            sprite.color = Color::hsl(180. * cell.team as f32, 0.6, 0.7);
+        if let Ok((_, children, mut team, mut sprite)) = q_cell.get_mut(event.cell) {
+            team.0 = 1 - **team;
+            sprite.color = Color::hsl(180. * team.0 as f32, 0.6, 0.7);
             for child in children.iter() {
                 if let Ok(mut sprite) = q_child.get_mut(child) {
-                    sprite.color = Color::hsl(180. * cell.team as f32, 0.8, 0.7);
+                    sprite.color = Color::hsl(180. * team.0 as f32, 0.8, 0.7);
                 }
             }
         }
