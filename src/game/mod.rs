@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::camera::ScalingMode};
 
 pub mod ball;
 pub mod field;
@@ -14,7 +14,15 @@ impl Plugin for GamePlugin {
 }
 
 fn setup_graphics(mut commands: Commands) {
-    commands.spawn(Camera2d);
+    commands.spawn((
+        Camera2d,
+        Projection::Orthographic(OrthographicProjection {
+            scaling_mode: ScalingMode::FixedVertical {
+                viewport_height: 1100.,
+            },
+            ..OrthographicProjection::default_2d()
+        }),
+    ));
 }
 
 #[derive(Component, Deref, DerefMut, PartialEq)]
