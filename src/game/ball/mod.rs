@@ -1,9 +1,10 @@
 use crate::game::field::Cell;
 use bevy::{math::bounding::Aabb2d, prelude::*};
+use bevy_ggrs::prelude::*;
 
 use super::Team;
 use super::field::{CellClicked, Wall};
-use super::paddle::Paddle;
+use super::paddle::{Paddle, move_paddles};
 
 const FIRST_BALL_SPEED: f32 = 300.0;
 
@@ -11,8 +12,10 @@ pub struct BallPlugin;
 
 impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_ball)
-            .add_systems(Update, (apply_velocity, check_collision).chain());
+        app.add_systems(Startup, setup_ball).add_systems(
+            GgrsSchedule,
+            (apply_velocity.after(move_paddles), check_collision).chain(),
+        );
     }
 }
 
@@ -31,22 +34,26 @@ fn setup_ball(
 ) {
     let radius = 10.0;
     let initial_velocity = Vec2::new(1.0, 1.0).normalize() * FIRST_BALL_SPEED;
-    commands.spawn((
-        Ball { radius },
-        Team(0),
-        Mesh2d(meshes.add(Mesh::from(Circle::new(radius)))),
-        MeshMaterial2d(materials.add(Color::srgb(0., 0., 0.))),
-        Transform::from_xyz(0., -300., 10.),
-        Velocity(initial_velocity),
-    ));
-    commands.spawn((
-        Ball { radius },
-        Team(1),
-        Mesh2d(meshes.add(Mesh::from(Circle::new(radius)))),
-        MeshMaterial2d(materials.add(Color::srgb(0., 0., 0.))),
-        Transform::from_xyz(0., 300., 10.),
-        Velocity(initial_velocity),
-    ));
+    commands
+        .spawn((
+            Ball { radius },
+            Team(0),
+            Mesh2d(meshes.add(Mesh::from(Circle::new(radius)))),
+            MeshMaterial2d(materials.add(Color::srgb(0., 0., 0.))),
+            Transform::from_xyz(0., -300., 10.),
+            Velocity(initial_velocity),
+        ))
+        .add_rollback();
+    commands
+        .spawn((
+            Ball { radius },
+            Team(1),
+            Mesh2d(meshes.add(Mesh::from(Circle::new(radius)))),
+            MeshMaterial2d(materials.add(Color::srgb(0., 0., 0.))),
+            Transform::from_xyz(0., 300., 10.),
+            Velocity(initial_velocity),
+        ))
+        .add_rollback();
 }
 
 fn apply_velocity(time: Res<Time>, mut q_ball: Query<(&Velocity, &mut Transform), With<Ball>>) {
