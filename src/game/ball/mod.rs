@@ -67,7 +67,7 @@ fn check_collision(
     mut q_ball: Query<(Entity, &Ball, &Team, &mut Transform, &mut Velocity)>,
     q_cell: Query<(Entity, &Cell, &Team, &Transform), Without<Ball>>,
     q_wall: Query<(&Wall, &Transform), Without<Ball>>,
-    q_paddle: Query<(&Paddle, &Transform), Without<Ball>>,
+    q_paddle: Query<(&Paddle, &Team, &Transform), Without<Ball>>,
     mut events: EventWriter<CellClicked>,
 ) {
     'ball: for (ball_entity, ball, ball_team, mut ball_transform, mut velocity) in q_ball.iter_mut()
@@ -93,7 +93,7 @@ fn check_collision(
         }
 
         // Check for paddle collisions
-        for (paddle, paddle_transform) in q_paddle.iter() {
+        for (paddle, paddle_team, paddle_transform) in q_paddle.iter() {
             let paddle_aabb =
                 Aabb2d::new(paddle_transform.translation.truncate(), paddle.half_size);
             let closest_point = paddle_aabb.closest_point(ball_pos);
@@ -108,7 +108,8 @@ fn check_collision(
                 let angle = hit_position * std::f32::consts::PI / 3.0; // Max 60 degrees
 
                 let speed = velocity.length();
-                velocity.0 = Vec2::new(angle.sin(), angle.cos()) * speed;
+                let dir = 1. - 2. * paddle_team.0 as f32; // Team 0: up, Team 1: down
+                velocity.0 = Vec2::new(angle.sin(), dir * angle.cos()) * speed;
                 ball_transform.translation += (normal * (ball.radius - diff.length())).extend(0.);
                 continue 'ball;
             }
