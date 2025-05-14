@@ -58,8 +58,17 @@
           packages.default = rustPlatform.buildRustPackage {
             pname = "online-breakout";
             version = "0.1.0";
+
             src = ./.;
-            cargoLock.lockFile = ./Cargo.lock;
+
+            cargoLock = {
+              lockFile = ./Cargo.lock;
+              outputHashes = {
+                "bevy_ggrs-0.17.0" = "sha256-hLhfk7pyxEr9nqRkYg6maIIAhoUGDRXTCF7DXZTGTyc=";
+                "ggrs-0.11.0" = "sha256-l24xHszLK9NrDil7LCwKlUbUMWPaBX2gYbAFb+21uoI=";
+                "matchbox_protocol-0.11.0" = "sha256-diUxoSAruZ1RVJwpcyI1T9Erq68095jN0Tv340FD7+Y=";
+              };
+            };
 
             nativeBuildInputs = with pkgs; [
               makeWrapper
