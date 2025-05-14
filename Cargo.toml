@@ -9,6 +9,7 @@ async-broadcast = "0.7.2"
 bevy = "0.16.0"
 bevy-tokio-tasks = "0.16.0"
 bevy_ggrs = { git = "https://github.com/gschup/bevy_ggrs" }
+clap = { version = "4.5.38", features = ["derive"] }
 futures = "0.3.31"
 iroh = "0.34.1"
 iroh-gossip = { version = "0.34.1", features = ["net"] }

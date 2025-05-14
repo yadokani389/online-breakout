@@ -20,6 +20,7 @@ impl Plugin for GamePlugin {
             paddle::PaddlePlugin,
             online::OnlinePlugin,
         ))
+        .init_state::<GameState>()
         .add_systems(Startup, setup_graphics)
         .rollback_component_with_clone::<Transform>();
     }
@@ -39,3 +40,10 @@ fn setup_graphics(mut commands: Commands) {
 
 #[derive(Component, Deref, DerefMut, PartialEq)]
 pub struct Team(pub usize);
+
+#[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
+enum GameState {
+    #[default]
+    Matchmaking,
+    InGame,
+}

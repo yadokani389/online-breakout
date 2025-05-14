@@ -28,7 +28,7 @@ const GOSSIP_TOPIC_ID: TopicId = TopicId::from_bytes(*b"__online_breakout_iroh_g
 
 #[derive(Debug, Clone)]
 pub struct IrohGossipSignallerBuilder {
-    router: Router,
+    _router: Router,
     gossip: Gossip,
     endpoint: Endpoint,
     matchbox_id: PeerId,
@@ -37,16 +37,6 @@ pub struct IrohGossipSignallerBuilder {
 }
 
 impl IrohGossipSignallerBuilder {
-    pub async fn shutdown(&self) -> anyhow::Result<()> {
-        info!("Shutting down IrohGossipSignallerBuilder");
-        self.router.shutdown().await?;
-        Ok(())
-    }
-
-    pub fn get_matchbox_id(&self) -> PeerId {
-        self.matchbox_id
-    }
-
     pub async fn new() -> anyhow::Result<Self> {
         info!("Creating new IrohGossipSignallerBuilder");
         let endpoint = Endpoint::builder()
@@ -64,7 +54,7 @@ impl IrohGossipSignallerBuilder {
         direct_message_recv.set_overflow(true);
         let direct_message_recv = direct_message_recv.deactivate();
 
-        let router = Router::builder(endpoint.clone())
+        let _router = Router::builder(endpoint.clone())
             .accept(GOSSIP_ALPN, gossip.clone())
             .accept(
                 DIRECT_MESSAGE_ALPN,
@@ -73,7 +63,7 @@ impl IrohGossipSignallerBuilder {
             .spawn()
             .await?;
         Ok(Self {
-            router,
+            _router,
             gossip,
             endpoint,
             matchbox_id,

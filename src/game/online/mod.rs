@@ -6,7 +6,9 @@ use bevy_tokio_tasks::TokioTasksRuntime;
 use iroh_gossip_signaller::IrohGossipSignallerBuilder;
 use matchbox_socket::{WebRtcSocket, WebRtcSocketBuilder};
 
-use crate::game::Config;
+use crate::{args::Args, game::Config};
+
+use super::GameState;
 
 pub mod direct_message;
 pub mod iroh_gossip_signaller;
@@ -16,18 +18,26 @@ pub struct OnlinePlugin;
 impl Plugin for OnlinePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(bevy_tokio_tasks::TokioTasksPlugin::default())
-            .add_systems(Startup, start_matchbox_socket)
-            .add_systems(Update, wait_for_players);
+            .add_systems(Startup, start_matchbox_socket.run_if(p2p_mode))
+            .add_systems(
+                Update,
+                (
+                    wait_for_players.run_if(p2p_mode),
+                    start_synctest_session.run_if(synctest_mode),
+                )
+                    .run_if(in_state(GameState::Matchmaking)),
+            );
     }
 }
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct IrohSocket(WebRtcSocket);
 
-fn start_matchbox_socket(runtime: ResMut<TokioTasksRuntime>) {
+fn start_matchbox_socket(runtime: ResMut<TokioTasksRuntime>, args: Res<Args>) {
+    let iroh_address = args.iroh.clone();
     runtime.spawn_background_task(|mut ctx| async move {
         let signaller_builder = IrohGossipSignallerBuilder::new().await.unwrap();
-        let builder = WebRtcSocketBuilder::new("")
+        let builder = WebRtcSocketBuilder::new(iroh_address)
             .signaller_builder(Arc::new(signaller_builder))
             .add_unreliable_channel();
         info!("Starting matchbox socket");
@@ -40,7 +50,11 @@ fn start_matchbox_socket(runtime: ResMut<TokioTasksRuntime>) {
     });
 }
 
-fn wait_for_players(mut commands: Commands, socket: Option<ResMut<IrohSocket>>) {
+fn wait_for_players(
+    mut commands: Commands,
+    socket: Option<ResMut<IrohSocket>>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
     let Some(mut socket) = socket else {
         return; // socket not ready yet
     };
@@ -79,4 +93,35 @@ fn wait_for_players(mut commands: Commands, socket: Option<ResMut<IrohSocket>>) 
         .expect("failed to start session");
 
     commands.insert_resource(bevy_ggrs::Session::P2P(ggrs_session));
+
+    next_state.set(GameState::InGame);
+}
+
+fn start_synctest_session(mut commands: Commands, mut next_state: ResMut<NextState<GameState>>) {
+    info!("Starting synctest session");
+    let num_players = 2;
+
+    let mut session_builder = ggrs::SessionBuilder::<Config>::new().with_num_players(num_players);
+
+    for i in 0..num_players {
+        session_builder = session_builder
+            .add_player(ggrs::PlayerType::Local, i)
+            .expect("failed to add player");
+    }
+
+    let ggrs_session = session_builder
+        .start_synctest_session()
+        .expect("failed to start session");
+
+    commands.insert_resource(bevy_ggrs::Session::SyncTest(ggrs_session));
+
+    next_state.set(GameState::InGame);
+}
+
+fn synctest_mode(args: Res<Args>) -> bool {
+    args.synctest
+}
+
+fn p2p_mode(args: Res<Args>) -> bool {
+    !args.synctest
 }
