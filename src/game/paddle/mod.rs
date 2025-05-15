@@ -5,7 +5,8 @@ use bevy::{
 };
 use bevy_ggrs::{LocalInputs, LocalPlayers, PlayerInputs, prelude::*};
 
-use super::{Config, Team, field::Wall};
+use super::field::Wall;
+use super::{Config, components::Team};
 
 const PADDLE_WIDTH: f32 = 100.0;
 const PADDLE_HEIGHT: f32 = 10.0;
@@ -84,12 +85,12 @@ pub fn move_paddles(
     time: Res<Time>,
     paddle_speed: Res<PaddleSpeed>,
     inputs: Res<PlayerInputs<Config>>,
-    mut query: Query<(&Paddle, &Team, &mut Transform)>,
+    query: Query<(&Paddle, &Team, &mut Transform)>,
     query_walls: Query<(&Wall, &Transform), Without<Paddle>>,
 ) {
-    // HACK: `for (paddle, team, mut paddle_transform) in &mut query` does not work for team 1
+    // HACK: `for (paddle, team, mut paddle_transform) in query` does not work for team 1
     query
-        .iter_mut()
+        .into_iter()
         .for_each(|(paddle, team, mut paddle_transform)| {
             let (input, _) = inputs[team.0];
             let mut direction = 0.0;

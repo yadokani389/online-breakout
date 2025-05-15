@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::Team;
+use super::components::Team;
 
 pub struct FieldPlugin;
 

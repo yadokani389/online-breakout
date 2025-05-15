@@ -1,11 +1,13 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_ggrs::prelude::*;
+use components::Velocity;
 use matchbox_socket::PeerId;
 
-pub mod ball;
-pub mod field;
-pub mod online;
-pub mod paddle;
+mod ball;
+mod components;
+mod field;
+mod online;
+mod paddle;
 
 type Config = bevy_ggrs::GgrsConfig<u8, PeerId>;
 
@@ -22,7 +24,8 @@ impl Plugin for GamePlugin {
         ))
         .init_state::<GameState>()
         .add_systems(Startup, setup_graphics)
-        .rollback_component_with_clone::<Transform>();
+        .rollback_component_with_clone::<Transform>()
+        .rollback_component_with_copy::<Velocity>();
     }
 }
 
@@ -37,9 +40,6 @@ fn setup_graphics(mut commands: Commands) {
         }),
     ));
 }
-
-#[derive(Component, Deref, DerefMut, PartialEq)]
-pub struct Team(pub usize);
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
 enum GameState {

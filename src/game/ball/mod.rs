@@ -2,7 +2,7 @@ use crate::game::field::Cell;
 use bevy::{math::bounding::Aabb2d, prelude::*};
 use bevy_ggrs::prelude::*;
 
-use super::Team;
+use super::components::{Team, Velocity};
 use super::field::{CellClicked, Wall};
 use super::paddle::{Paddle, move_paddles};
 
@@ -23,9 +23,6 @@ impl Plugin for BallPlugin {
 pub struct Ball {
     pub radius: f32,
 }
-
-#[derive(Component, Deref, DerefMut)]
-pub struct Velocity(pub Vec2);
 
 fn setup_ball(
     mut commands: Commands,
@@ -56,26 +53,25 @@ fn setup_ball(
         .add_rollback();
 }
 
-fn apply_velocity(time: Res<Time>, mut q_ball: Query<(&Velocity, &mut Transform), With<Ball>>) {
-    for (velocity, mut transform) in q_ball.iter_mut() {
+fn apply_velocity(time: Res<Time>, q_ball: Query<(&Velocity, &mut Transform), With<Ball>>) {
+    for (velocity, mut transform) in q_ball {
         transform.translation += velocity.extend(0.) * time.delta_secs();
     }
 }
 
 fn check_collision(
     mut commands: Commands,
-    mut q_ball: Query<(Entity, &Ball, &Team, &mut Transform, &mut Velocity)>,
+    q_ball: Query<(Entity, &Ball, &Team, &mut Transform, &mut Velocity)>,
     q_cell: Query<(Entity, &Cell, &Team, &Transform), Without<Ball>>,
     q_wall: Query<(&Wall, &Transform), Without<Ball>>,
     q_paddle: Query<(&Paddle, &Team, &Transform), Without<Ball>>,
     mut events: EventWriter<CellClicked>,
 ) {
-    'ball: for (ball_entity, ball, ball_team, mut ball_transform, mut velocity) in q_ball.iter_mut()
-    {
+    'ball: for (ball_entity, ball, ball_team, mut ball_transform, mut velocity) in q_ball {
         let ball_pos = ball_transform.translation.truncate();
 
         // Check for wall collisions
-        for (wall, wall_transform) in q_wall.iter() {
+        for (wall, wall_transform) in &q_wall {
             let closest_point = Aabb2d::new(wall_transform.translation.truncate(), wall.half_size)
                 .closest_point(ball_pos);
 
@@ -93,7 +89,7 @@ fn check_collision(
         }
 
         // Check for paddle collisions
-        for (paddle, paddle_team, paddle_transform) in q_paddle.iter() {
+        for (paddle, paddle_team, paddle_transform) in &q_paddle {
             let paddle_aabb =
                 Aabb2d::new(paddle_transform.translation.truncate(), paddle.half_size);
             let closest_point = paddle_aabb.closest_point(ball_pos);
@@ -116,7 +112,7 @@ fn check_collision(
         }
 
         // Check for cell collisions
-        for (cell_entity, cell, cell_team, cell_transform) in q_cell.iter() {
+        for (cell_entity, cell, cell_team, cell_transform) in &q_cell {
             if cell_team != ball_team {
                 continue;
             }
