@@ -157,7 +157,7 @@
           };
 
           packages = {
-            inherit online-breakout online-breakout-wasm;
+            inherit online-breakout online-breakout-wasm cargoDeps;
             default = online-breakout;
           };
 

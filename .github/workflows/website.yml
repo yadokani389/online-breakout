@@ -1,0 +1,55 @@
+on:
+  push:
+    branches:
+      - main
+
+name: Website
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install nix
+        uses: cachix/install-nix-action@v30
+
+      - name: Restore binary cache
+        uses: ./.github/actions/binary-cache
+        with:
+          package: .#cargoDeps
+
+      - name: Build
+        run: nix build .#online-breakout-wasm
+
+      - name: Generate wasm bind
+        run: |
+          nix run nixpkgs#wasm-bindgen-cli -- --out-name online-breakout \
+            --out-dir dist \
+            --target web result/lib/online-breakout.wasm
+
+      - name: Copy index.html
+        run: cp website/index.html dist/index.html
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3.0.1
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy Pages
+    needs:
+      - build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy GitHub Pages site
+        id: deployment
+        uses: actions/deploy-pages@v4.0.5

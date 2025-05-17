@@ -16,5 +16,10 @@ jobs:
       - name: Install nix
         uses: cachix/install-nix-action@v30
 
+      - name: Restore binary cache
+        uses: ./.github/actions/binary-cache
+        with:
+          package: .#cargoDeps
+
       - name: Check
         run: nix flake check

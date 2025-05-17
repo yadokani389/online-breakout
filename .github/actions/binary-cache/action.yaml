@@ -1,0 +1,33 @@
+# https://github.com/asa1984/infra/blob/377d1d193b88a2fe8d442b14d18c55c6296f918b/.github/actions/binary-cache/action.yaml
+name: Setup Binary Cache
+description: Setup the Nix binary cache
+
+inputs:
+  package:
+    description: The package to cache
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get store path of `${{ inputs.package }}`
+      id: get-store-path
+      shell: bash
+      run: echo "store-path=$(nix eval ${{ inputs.package }} --apply builtins.toString)" >> $GITHUB_OUTPUT
+
+    - name: Restore binary cache
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: /tmp/binary-cache
+        key: ${{ steps.get-store-path.outputs.store-path }}
+
+    - name: If cache hit, copy binary cache to nix store
+      if: steps.cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: nix copy --from file:///tmp/binary-cache --no-check-sigs ${{ inputs.package }}
+
+    - name: If cache miss, copy `${{ inputs.package }}` to binary cache
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: nix copy --to file:///tmp/binary-cache?compression=zstd ${{ inputs.package }}
