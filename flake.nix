@@ -43,10 +43,24 @@
           ...
         }:
         let
-          toolchain = pkgs.rust-bin.stable.latest.default;
+          toolchain = pkgs.rust-bin.stable.latest.default.override {
+            targets = [ "wasm32-unknown-unknown" ];
+          };
           rustPlatform = pkgs.makeRustPlatform {
             cargo = toolchain;
             rustc = toolchain;
+          };
+
+          wasm-server-runner = rustPlatform.buildRustPackage rec {
+            pname = "wasm-server-runner";
+            version = "1.0.0";
+            src = pkgs.fetchFromGitHub {
+              owner = "jakobhellermann";
+              repo = pname;
+              rev = "v${version}";
+              sha256 = "sha256-3ARVVA+W9IS+kpV8j5lL/z6/ZImDaA+m0iEEQ2mSiTw=";
+            };
+            cargoHash = "sha256-FrnCmfSRAePZuWLC1/iRJ87CwLtgWRpbk6nJLyQQIT8=";
           };
         in
         {
@@ -67,6 +81,7 @@
                 "bevy_ggrs-0.17.0" = "sha256-hLhfk7pyxEr9nqRkYg6maIIAhoUGDRXTCF7DXZTGTyc=";
                 "ggrs-0.11.0" = "sha256-l24xHszLK9NrDil7LCwKlUbUMWPaBX2gYbAFb+21uoI=";
                 "matchbox_protocol-0.11.0" = "sha256-diUxoSAruZ1RVJwpcyI1T9Erq68095jN0Tv340FD7+Y=";
+                "bevy-wasm-tasks-0.16.0" = "sha256-8RBYwPmGiiXVkmIrV/n2UhIDEX8UzAwIUZV+PcSog5c=";
               };
             };
 
@@ -106,8 +121,10 @@
             ];
             inherit (config.packages.default) nativeBuildInputs buildInputs;
 
-            packages = with pkgs; [
-              clang
+            packages = [
+              pkgs.clang
+              pkgs.wasm-bindgen-cli
+              wasm-server-runner
             ];
 
             LD_LIBRARY_PATH =
@@ -118,6 +135,15 @@
                 udev
                 alsa-lib
               ];
+
+            shellHook = ''
+              # This is an action to build to wasm
+              # cc-wrapper is currently not designed with multi-target https://github.com/NixOS/nixpkgs/issues/395191
+              # and clang-19 does not have include https://github.com/NixOS/nixpkgs/issues/351962
+              # Someone please help me
+              # -ffreestanding set __STDC_HOSTED__ to 0
+              export CC="clang-19 -ffreestanding -isystem ${pkgs.libclang.lib}/lib/clang/19/include -isystem ${pkgs.glibc.dev}/include"
+            '';
           };
 
           treefmt = {

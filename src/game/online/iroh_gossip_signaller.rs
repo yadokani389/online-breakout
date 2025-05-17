@@ -1,9 +1,6 @@
 // https://github.com/johanhelsing/matchbox/blob/9e18318c46d12609a41fd56cf3fb9bb47cea6dab/examples/custom_signaller/src/iroh_gossip_signaller.rs
 
-use std::{
-    collections::BTreeMap,
-    time::{Duration, Instant},
-};
+use std::{collections::BTreeMap, time::Duration};
 
 use anyhow::Context;
 use bevy::prelude::*;
@@ -19,6 +16,7 @@ use matchbox_socket::{
 };
 use n0_future::StreamExt;
 use serde::{Deserialize, Serialize};
+use web_time::Instant;
 
 use crate::game::online::direct_message::{
     DIRECT_MESSAGE_ALPN, DirectMessageProtocol, send_direct_message,

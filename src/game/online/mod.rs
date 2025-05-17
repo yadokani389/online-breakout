@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use bevy::prelude::*;
 use bevy_ggrs::*;
-use bevy_tokio_tasks::TokioTasksRuntime;
+use bevy_wasm_tasks::Tasks;
 use iroh_gossip_signaller::IrohGossipSignallerBuilder;
 use matchbox_socket::{WebRtcSocket, WebRtcSocketBuilder};
 
@@ -17,7 +17,7 @@ pub struct OnlinePlugin;
 
 impl Plugin for OnlinePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(bevy_tokio_tasks::TokioTasksPlugin::default())
+        app.add_plugins(bevy_wasm_tasks::TasksPlugin::default())
             .add_systems(Startup, start_matchbox_socket.run_if(p2p_mode))
             .add_systems(
                 Update,
@@ -33,19 +33,18 @@ impl Plugin for OnlinePlugin {
 #[derive(Resource, Deref, DerefMut)]
 pub struct IrohSocket(WebRtcSocket);
 
-fn start_matchbox_socket(runtime: ResMut<TokioTasksRuntime>, args: Res<Args>) {
+fn start_matchbox_socket(tasks: Tasks, args: Res<Args>) {
     let iroh_address = args.iroh.clone();
-    runtime.spawn_background_task(|mut ctx| async move {
+    tasks.spawn_auto(async move |x| {
         let signaller_builder = IrohGossipSignallerBuilder::new().await.unwrap();
         let builder = WebRtcSocketBuilder::new(iroh_address)
             .signaller_builder(Arc::new(signaller_builder))
             .add_unreliable_channel();
         info!("Starting matchbox socket");
         let (socket, message_loop_fut) = builder.build();
-        ctx.run_on_main_thread(move |ctx| {
+        x.submit_on_main_thread(move |ctx| {
             ctx.world.insert_resource(IrohSocket(socket));
-        })
-        .await;
+        });
         _ = message_loop_fut.await;
     });
 }
