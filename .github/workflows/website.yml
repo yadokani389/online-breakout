@@ -1,7 +1,11 @@
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - 'website/**'
 
 name: Website
 
