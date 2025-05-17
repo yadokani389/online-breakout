@@ -21,13 +21,19 @@ cargo run -- -i xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 If you are using Nix, you can also run the application without clone:
 
-
 ```sh
 nix run github:yadokani389/online-breakout
 ```
+
 This can be used instead of `cargo run`.
 
 ## web
+
+You can play here! <https://yadokani389.github.io/online-breakout/>
+
+First, access this link and retrieve the `iroh id` from the Console log.
+Next, append `#` and the `iroh id` to the link and open it in a new window to connect.
+(e.g., <https://yadokani389.github.io/online-breakout/#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx>)
 
 To run the web version, execute the following commands:
 
@@ -35,8 +41,3 @@ To run the web version, execute the following commands:
 nix develop
 cargo run --target wasm32-unknown-unknown
 ```
-
-Once running, access the application via the provided URL (e.g., <http://127.0.0.1:1334/>).
-
-To connect to the application, append the `#` and the `iroh id` to the URL.
-(e.g., <http://127.0.0.1:1334/#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx>)
