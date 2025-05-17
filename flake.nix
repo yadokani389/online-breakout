@@ -62,6 +62,93 @@
             };
             cargoHash = "sha256-FrnCmfSRAePZuWLC1/iRJ87CwLtgWRpbk6nJLyQQIT8=";
           };
+
+          # This is an action to build to wasm
+          # cc-wrapper is currently not designed with multi-target https://github.com/NixOS/nixpkgs/issues/395191
+          # and clang-19 does not have include https://github.com/NixOS/nixpkgs/issues/351962
+          # Someone please help me
+          # -ffreestanding set __STDC_HOSTED__ to 0
+          cc = "clang-19 -ffreestanding -isystem ${pkgs.libclang.lib}/lib/clang/19/include -isystem ${pkgs.glibc.dev}/include";
+
+          cargoDeps = rustPlatform.importCargoLock {
+            lockFile = ./Cargo.lock;
+            outputHashes = {
+              "bevy_ggrs-0.17.0" = "sha256-hLhfk7pyxEr9nqRkYg6maIIAhoUGDRXTCF7DXZTGTyc=";
+              "ggrs-0.11.0" = "sha256-l24xHszLK9NrDil7LCwKlUbUMWPaBX2gYbAFb+21uoI=";
+              "matchbox_protocol-0.11.0" = "sha256-diUxoSAruZ1RVJwpcyI1T9Erq68095jN0Tv340FD7+Y=";
+              "bevy-wasm-tasks-0.16.0" = "sha256-8RBYwPmGiiXVkmIrV/n2UhIDEX8UzAwIUZV+PcSog5c=";
+            };
+          };
+
+          commonAttrs = {
+            version = "0.1.0";
+
+            src = ./.;
+
+            inherit cargoDeps;
+          };
+
+          online-breakout = rustPlatform.buildRustPackage (
+            commonAttrs
+            // {
+              pname = "online-breakout";
+
+              nativeBuildInputs = with pkgs; [
+                makeWrapper
+                pkg-config
+              ];
+
+              buildInputs = with pkgs; [
+                zstd
+                alsa-lib
+                udev
+                vulkan-loader
+                wayland
+                xorg.libX11
+                xorg.libXcursor
+                xorg.libXi
+                xorg.libXrandr
+              ];
+
+              postFixup =
+                with pkgs;
+                lib.optionalString stdenv.hostPlatform.isLinux ''
+                  patchelf $out/bin/online-breakout \
+                    --add-rpath ${
+                      lib.makeLibraryPath [
+                        libxkbcommon
+                        vulkan-loader
+                      ]
+                    }
+                '';
+            }
+          );
+
+          online-breakout-wasm = rustPlatform.buildRustPackage (
+            commonAttrs
+            // {
+              pname = "online-breakout-wasm";
+
+              buildPhase = ''
+                CC='${cc}' cargo build --release --target=wasm32-unknown-unknown
+              '';
+
+              installPhase = ''
+                mkdir -p $out/lib
+                cp target/wasm32-unknown-unknown/release/*.wasm $out/lib/
+              '';
+
+              nativeBuildInputs = with pkgs; [
+                pkg-config
+                clang_19
+              ];
+
+              buildInputs = with pkgs; [
+                alsa-lib
+                udev
+              ];
+            }
+          );
         in
         {
           _module.args.pkgs = import nixpkgs {
@@ -69,60 +156,19 @@
             overlays = [ inputs.rust-overlay.overlays.default ];
           };
 
-          packages.default = rustPlatform.buildRustPackage {
-            pname = "online-breakout";
-            version = "0.1.0";
-
-            src = ./.;
-
-            cargoLock = {
-              lockFile = ./Cargo.lock;
-              outputHashes = {
-                "bevy_ggrs-0.17.0" = "sha256-hLhfk7pyxEr9nqRkYg6maIIAhoUGDRXTCF7DXZTGTyc=";
-                "ggrs-0.11.0" = "sha256-l24xHszLK9NrDil7LCwKlUbUMWPaBX2gYbAFb+21uoI=";
-                "matchbox_protocol-0.11.0" = "sha256-diUxoSAruZ1RVJwpcyI1T9Erq68095jN0Tv340FD7+Y=";
-                "bevy-wasm-tasks-0.16.0" = "sha256-8RBYwPmGiiXVkmIrV/n2UhIDEX8UzAwIUZV+PcSog5c=";
-              };
-            };
-
-            nativeBuildInputs = with pkgs; [
-              makeWrapper
-              pkg-config
-            ];
-
-            buildInputs = with pkgs; [
-              zstd
-              alsa-lib
-              udev
-              vulkan-loader
-              wayland
-              xorg.libX11
-              xorg.libXcursor
-              xorg.libXi
-              xorg.libXrandr
-            ];
-
-            postFixup =
-              with pkgs;
-              lib.optionalString stdenv.hostPlatform.isLinux ''
-                patchelf $out/bin/online-breakout \
-                  --add-rpath ${
-                    lib.makeLibraryPath [
-                      libxkbcommon
-                      vulkan-loader
-                    ]
-                  }
-              '';
+          packages = {
+            inherit online-breakout online-breakout-wasm;
+            default = online-breakout;
           };
 
           devShells.default = pkgs.mkShell {
             inputsFrom = [
               config.pre-commit.devShell
             ];
-            inherit (config.packages.default) nativeBuildInputs buildInputs;
+            inherit (online-breakout) nativeBuildInputs buildInputs;
 
             packages = [
-              pkgs.clang
+              pkgs.clang_19
               pkgs.wasm-bindgen-cli
               wasm-server-runner
             ];
@@ -137,12 +183,7 @@
               ];
 
             shellHook = ''
-              # This is an action to build to wasm
-              # cc-wrapper is currently not designed with multi-target https://github.com/NixOS/nixpkgs/issues/395191
-              # and clang-19 does not have include https://github.com/NixOS/nixpkgs/issues/351962
-              # Someone please help me
-              # -ffreestanding set __STDC_HOSTED__ to 0
-              export CC="clang-19 -ffreestanding -isystem ${pkgs.libclang.lib}/lib/clang/19/include -isystem ${pkgs.glibc.dev}/include"
+              export CC='${cc}'
             '';
           };
 
@@ -166,6 +207,7 @@
           pre-commit = {
             check.enable = true;
             settings = {
+              settings.rust.check.cargoDeps = cargoDeps;
               hooks = {
                 ripsecrets.enable = true;
                 typos.enable = true;
@@ -175,6 +217,7 @@
                   enable = true;
                   packageOverrides.cargo = toolchain;
                   packageOverrides.clippy = toolchain;
+                  extraPackages = online-breakout.nativeBuildInputs ++ online-breakout.buildInputs;
                 };
               };
             };
