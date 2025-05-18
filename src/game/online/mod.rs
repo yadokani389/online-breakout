@@ -37,10 +37,14 @@ impl Plugin for OnlinePlugin {
 #[derive(Resource, Deref, DerefMut)]
 pub struct IrohSocket(WebRtcSocket);
 
+#[derive(Resource)]
+pub struct IrohId(pub iroh::PublicKey);
+
 fn start_matchbox_socket(tasks: Tasks, args: Res<Args>) {
     let iroh_address = args.iroh.clone();
     tasks.spawn_auto(async move |x| {
         let signaller_builder = IrohGossipSignallerBuilder::new().await.unwrap();
+        let iroh_id = signaller_builder.iroh_id;
         let builder = WebRtcSocketBuilder::new(iroh_address)
             .signaller_builder(Arc::new(signaller_builder))
             .add_unreliable_channel();
@@ -48,6 +52,7 @@ fn start_matchbox_socket(tasks: Tasks, args: Res<Args>) {
         let (socket, message_loop_fut) = builder.build();
         x.submit_on_main_thread(move |ctx| {
             ctx.world.insert_resource(IrohSocket(socket));
+            ctx.world.insert_resource(IrohId(iroh_id));
         });
         _ = message_loop_fut.await;
     });
