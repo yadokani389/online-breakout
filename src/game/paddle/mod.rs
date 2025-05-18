@@ -5,8 +5,8 @@ use bevy::{
 };
 use bevy_ggrs::{LocalInputs, LocalPlayers, PlayerInputs, prelude::*};
 
-use super::field::Wall;
 use super::{Config, components::Team};
+use super::{GameState, field::Wall};
 
 const PADDLE_WIDTH: f32 = 100.0;
 const PADDLE_HEIGHT: f32 = 10.0;
@@ -20,7 +20,7 @@ pub struct PaddlePlugin;
 impl Plugin for PaddlePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(PaddleSpeed(300.))
-            .add_systems(Startup, setup_paddle)
+            .add_systems(OnEnter(GameState::InGame), setup_paddle)
             .add_systems(ReadInputs, read_local_inputs)
             .add_systems(GgrsSchedule, move_paddles);
     }

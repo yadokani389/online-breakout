@@ -12,13 +12,17 @@ use super::GameState;
 
 pub mod direct_message;
 pub mod iroh_gossip_signaller;
+pub mod network_role;
 
 pub struct OnlinePlugin;
 
 impl Plugin for OnlinePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(bevy_wasm_tasks::TasksPlugin::default())
-            .add_systems(Startup, start_matchbox_socket.run_if(p2p_mode))
+            .add_systems(
+                OnEnter(GameState::Matchmaking),
+                start_matchbox_socket.run_if(p2p_mode),
+            )
             .add_systems(
                 Update,
                 (
