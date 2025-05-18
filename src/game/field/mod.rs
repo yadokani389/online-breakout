@@ -1,14 +1,14 @@
 use bevy::prelude::*;
 
-use super::components::Team;
+use super::{GameState, components::Team};
 
 pub struct FieldPlugin;
 
 impl Plugin for FieldPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<CellClicked>()
-            .add_systems(Startup, setup_field)
-            .add_systems(Update, (toggle_cell,));
+            .add_systems(OnEnter(GameState::InGame), setup_field)
+            .add_systems(Update, toggle_cell.run_if(in_state(GameState::InGame)));
     }
 }
 

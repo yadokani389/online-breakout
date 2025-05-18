@@ -2,6 +2,7 @@ use crate::game::field::Cell;
 use bevy::{math::bounding::Aabb2d, prelude::*};
 use bevy_ggrs::prelude::*;
 
+use super::GameState;
 use super::components::{Team, Velocity};
 use super::field::{CellClicked, Wall};
 use super::paddle::{Paddle, move_paddles};
@@ -12,10 +13,11 @@ pub struct BallPlugin;
 
 impl Plugin for BallPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_ball).add_systems(
-            GgrsSchedule,
-            (apply_velocity.after(move_paddles), check_collision).chain(),
-        );
+        app.add_systems(OnEnter(GameState::InGame), setup_ball)
+            .add_systems(
+                GgrsSchedule,
+                (apply_velocity.after(move_paddles), check_collision).chain(),
+            );
     }
 }
 

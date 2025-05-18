@@ -6,6 +6,7 @@ use matchbox_socket::PeerId;
 mod ball;
 mod components;
 mod field;
+mod menu;
 mod online;
 mod paddle;
 
@@ -17,6 +18,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             GgrsPlugin::<Config>::default(),
+            menu::MenuPlugin,
             ball::BallPlugin,
             field::FieldPlugin,
             paddle::PaddlePlugin,
@@ -44,6 +46,7 @@ fn setup_graphics(mut commands: Commands) {
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
 enum GameState {
     #[default]
+    Lobby,
     Matchmaking,
     InGame,
 }
