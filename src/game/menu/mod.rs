@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 
 pub mod lobby;
+pub mod matchmaking;
 
 pub struct MenuPlugin;
 
@@ -12,6 +13,7 @@ impl Plugin for MenuPlugin {
                 enable_multipass_for_primary_context: true,
             },
             lobby::LobbyPlugin,
+            matchmaking::MatchmakingPlugin,
         ));
     }
 }

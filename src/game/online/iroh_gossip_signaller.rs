@@ -30,7 +30,7 @@ pub struct IrohGossipSignallerBuilder {
     gossip: Gossip,
     endpoint: Endpoint,
     matchbox_id: PeerId,
-    iroh_id: PublicKey,
+    pub iroh_id: PublicKey,
     direct_message_recv: async_broadcast::InactiveReceiver<(PublicKey, PeerEvent)>,
 }
 
