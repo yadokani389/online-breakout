@@ -63,6 +63,7 @@ fn setup_field(mut commands: Commands) {
         }
     }
 
+    // spawn walls
     let wall_thickness = 1000.;
     let wall_width = field_width as f32 * cell_size;
     let wall_height = field_height as f32 * cell_size * 2.;

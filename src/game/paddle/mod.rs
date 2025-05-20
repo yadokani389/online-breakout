@@ -63,9 +63,12 @@ fn setup_paddle(
 fn read_local_inputs(
     mut commands: Commands,
     keys: Res<ButtonInput<KeyCode>>,
+    touches: Res<Touches>,
     local_players: Res<LocalPlayers>,
+    q_camera: Single<(&Camera, &GlobalTransform)>,
 ) {
     let mut local_inputs = HashMap::new();
+    let (camera, camera_transform) = *q_camera;
 
     for handle in &local_players.0 {
         let mut input = 0;
@@ -75,6 +78,18 @@ fn read_local_inputs(
         if keys.pressed(KeyCode::ArrowRight) {
             input |= INPUT_RIGHT;
         }
+
+        for finger in touches.iter() {
+            let Ok(pos) = camera.viewport_to_world_2d(camera_transform, finger.position()) else {
+                continue;
+            };
+            if pos.x.is_sign_negative() {
+                input |= INPUT_LEFT;
+            } else {
+                input |= INPUT_RIGHT;
+            }
+        }
+
         local_inputs.insert(*handle, input);
     }
 
