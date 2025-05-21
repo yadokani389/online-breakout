@@ -3,14 +3,14 @@ use bevy_ggrs::prelude::*;
 
 use crate::game::ball::check_collision;
 
-use super::{GameState, components::Team};
+use super::{GameState, components::Team, online::network_role::NetworkRole};
 
 pub struct FieldPlugin;
 
 impl Plugin for FieldPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<CellClicked>()
-            .add_systems(OnEnter(GameState::InGame), setup_field)
+            .add_systems(OnEnter(GameState::InGame), (rotate, setup_field))
             .add_systems(
                 GgrsSchedule,
                 toggle_cell
@@ -37,6 +37,13 @@ pub struct Cell {
 #[derive(Event)]
 pub struct CellClicked {
     pub cell: Entity,
+}
+
+fn rotate(mut camera: Single<&mut Transform, With<Camera>>, role: Res<NetworkRole>) {
+    if matches!(*role, NetworkRole::Client) {
+        return;
+    }
+    camera.rotate_z(std::f32::consts::PI);
 }
 
 fn setup_field(mut commands: Commands) {
