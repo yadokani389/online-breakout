@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_ggrs::prelude::*;
-use components::Velocity;
+use components::{Team, Velocity};
 use matchbox_socket::PeerId;
 
 mod ball;
@@ -27,7 +27,8 @@ impl Plugin for GamePlugin {
         .init_state::<GameState>()
         .add_systems(Startup, setup_graphics)
         .rollback_component_with_clone::<Transform>()
-        .rollback_component_with_copy::<Velocity>();
+        .rollback_component_with_copy::<Velocity>()
+        .rollback_component_with_copy::<Team>();
     }
 }
 

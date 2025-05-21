@@ -61,7 +61,7 @@ fn apply_velocity(time: Res<Time>, q_ball: Query<(&Velocity, &mut Transform), Wi
     }
 }
 
-fn check_collision(
+pub fn check_collision(
     mut commands: Commands,
     q_ball: Query<(Entity, &Ball, &Team, &mut Transform, &mut Velocity)>,
     q_cell: Query<(Entity, &Cell, &Team, &Transform), Without<Ball>>,
