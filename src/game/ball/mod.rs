@@ -4,10 +4,11 @@ use bevy_ggrs::prelude::*;
 
 use super::GameState;
 use super::components::{Team, Velocity};
-use super::field::{CellClicked, Wall};
+use super::field::{CellClicked, Wall, toggle_cell};
 use super::paddle::{Paddle, move_paddles};
 
 const FIRST_BALL_SPEED: f32 = 300.0;
+const BALL_RADIUS: f32 = 10.0;
 
 pub struct BallPlugin;
 
@@ -16,7 +17,11 @@ impl Plugin for BallPlugin {
         app.add_systems(OnEnter(GameState::InGame), setup_ball)
             .add_systems(
                 GgrsSchedule,
-                (apply_velocity.after(move_paddles), check_collision).chain(),
+                (apply_velocity, check_collision)
+                    .chain()
+                    .after(move_paddles)
+                    .before(toggle_cell)
+                    .run_if(in_state(GameState::InGame)),
             );
     }
 }
@@ -31,13 +36,14 @@ fn setup_ball(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let radius = 10.0;
     let initial_velocity = Vec2::new(1.0, 1.0).normalize() * FIRST_BALL_SPEED;
     commands
         .spawn((
-            Ball { radius },
+            Ball {
+                radius: BALL_RADIUS,
+            },
             Team(0),
-            Mesh2d(meshes.add(Mesh::from(Circle::new(radius)))),
+            Mesh2d(meshes.add(Mesh::from(Circle::new(BALL_RADIUS)))),
             MeshMaterial2d(materials.add(Color::srgb(0., 0., 0.))),
             Transform::from_xyz(0., -300., 10.),
             Velocity(initial_velocity),
@@ -45,9 +51,11 @@ fn setup_ball(
         .add_rollback();
     commands
         .spawn((
-            Ball { radius },
+            Ball {
+                radius: BALL_RADIUS,
+            },
             Team(1),
-            Mesh2d(meshes.add(Mesh::from(Circle::new(radius)))),
+            Mesh2d(meshes.add(Mesh::from(Circle::new(BALL_RADIUS)))),
             MeshMaterial2d(materials.add(Color::srgb(0., 0., 0.))),
             Transform::from_xyz(0., 300., 10.),
             Velocity(initial_velocity),
@@ -61,11 +69,11 @@ fn apply_velocity(time: Res<Time>, q_ball: Query<(&Velocity, &mut Transform), Wi
     }
 }
 
-pub fn check_collision(
+fn check_collision(
     mut commands: Commands,
     q_ball: Query<(Entity, &Ball, &Team, &mut Transform, &mut Velocity)>,
     q_cell: Query<(Entity, &Cell, &Team, &Transform), Without<Ball>>,
-    q_wall: Query<(&Wall, &Transform), Without<Ball>>,
+    q_wall: Query<(&Wall, &Transform, Option<&Team>), Without<Ball>>,
     q_paddle: Query<(&Paddle, &Team, &Transform), Without<Ball>>,
     mut events: EventWriter<CellClicked>,
 ) {
@@ -73,7 +81,7 @@ pub fn check_collision(
         let ball_pos = ball_transform.translation.truncate();
 
         // Check for wall collisions
-        for (wall, wall_transform) in &q_wall {
+        for (wall, wall_transform, wall_team) in &q_wall {
             let closest_point = Aabb2d::new(wall_transform.translation.truncate(), wall.half_size)
                 .closest_point(ball_pos);
 
@@ -84,6 +92,10 @@ pub fn check_collision(
 
             let diff = ball_pos - closest_point;
             if diff.length_squared() < ball.radius * ball.radius {
+                if wall_team.map(|team| team == ball_team).unwrap_or(false) {
+                    commands.entity(ball_entity).despawn();
+                    continue 'ball;
+                }
                 let normal = diff.normalize();
                 velocity.0 = velocity.reflect(normal);
                 ball_transform.translation += (normal * (ball.radius - diff.length())).extend(0.);
