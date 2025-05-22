@@ -6,6 +6,15 @@ readme = "README.md"
 repository = "https://github.com/yadokani389/online-breakout"
 version = "0.1.0"
 
+[profile.release]
+codegen-units = 1
+lto = true
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+strip = "debuginfo"
+
 [dependencies]
 anyhow = "1.0.98"
 async-broadcast = "0.7.2"

@@ -127,12 +127,12 @@
               pname = "online-breakout-wasm";
 
               buildPhase = ''
-                CC='${cc}' cargo build --release --target=wasm32-unknown-unknown
+                CC='${cc}' cargo build --profile wasm-release --target=wasm32-unknown-unknown
               '';
 
               installPhase = ''
                 mkdir -p $out/lib
-                cp target/wasm32-unknown-unknown/release/*.wasm $out/lib/
+                cp target/wasm32-unknown-unknown/wasm-release/*.wasm $out/lib/
               '';
 
               nativeBuildInputs = with pkgs; [
