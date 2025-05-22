@@ -3,9 +3,11 @@ use bevy::{math::bounding::Aabb2d, prelude::*};
 use bevy_ggrs::prelude::*;
 
 use super::GameState;
-use super::components::{Team, Velocity};
+use super::components::Team;
 use super::field::{CellClicked, Wall, toggle_cell};
 use super::paddle::{Paddle, move_paddles};
+
+mod respawn;
 
 const FIRST_BALL_SPEED: f32 = 300.0;
 const BALL_RADIUS: f32 = 10.0;
@@ -17,19 +19,30 @@ impl Plugin for BallPlugin {
         app.add_systems(OnEnter(GameState::InGame), setup_ball)
             .add_systems(
                 GgrsSchedule,
-                (apply_velocity, check_collision)
+                (
+                    apply_velocity,
+                    check_collision,
+                    respawn::respawn_balls,
+                    respawn::handle_respawning_balls,
+                )
                     .chain()
                     .after(move_paddles)
                     .before(toggle_cell)
                     .run_if(in_state(GameState::InGame)),
-            );
+            )
+            .rollback_component_with_copy::<Ball>()
+            .rollback_component_with_copy::<Velocity>()
+            .rollback_component_with_clone::<respawn::RespawningBall>();
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy)]
 pub struct Ball {
     pub radius: f32,
 }
+
+#[derive(Component, Deref, DerefMut, Clone, Copy, Debug)]
+pub struct Velocity(pub Vec2);
 
 fn setup_ball(
     mut commands: Commands,
