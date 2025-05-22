@@ -58,8 +58,7 @@ impl IrohGossipSignallerBuilder {
                 DIRECT_MESSAGE_ALPN,
                 DirectMessageProtocol(direct_message_send),
             )
-            .spawn()
-            .await?;
+            .spawn();
         Ok(Self {
             _router,
             gossip,

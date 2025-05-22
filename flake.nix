@@ -73,9 +73,6 @@
           cargoDeps = rustPlatform.importCargoLock {
             lockFile = ./Cargo.lock;
             outputHashes = {
-              "bevy_ggrs-0.17.0" = "sha256-hLhfk7pyxEr9nqRkYg6maIIAhoUGDRXTCF7DXZTGTyc=";
-              "ggrs-0.11.0" = "sha256-l24xHszLK9NrDil7LCwKlUbUMWPaBX2gYbAFb+21uoI=";
-              "matchbox_protocol-0.11.0" = "sha256-diUxoSAruZ1RVJwpcyI1T9Erq68095jN0Tv340FD7+Y=";
               "bevy-wasm-tasks-0.16.0" = "sha256-8RBYwPmGiiXVkmIrV/n2UhIDEX8UzAwIUZV+PcSog5c=";
             };
           };
