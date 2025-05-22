@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use bevy_ggrs::prelude::*;
 
-use crate::game::ball::check_collision;
-
 use super::{GameState, components::Team, online::network_role::NetworkRole};
 
 pub struct FieldPlugin;
@@ -13,9 +11,7 @@ impl Plugin for FieldPlugin {
             .add_systems(OnEnter(GameState::InGame), (rotate, setup_field))
             .add_systems(
                 GgrsSchedule,
-                toggle_cell
-                    .run_if(in_state(GameState::InGame))
-                    .after(check_collision),
+                toggle_cell.run_if(in_state(GameState::InGame)),
             )
             .add_systems(
                 Update,
@@ -93,6 +89,7 @@ fn setup_field(mut commands: Commands) {
 
     commands.spawn((
         Wall { half_size },
+        Team(1),
         Sprite::from_color(
             Color::srgb(0.3, 0.3, 0.3),
             Vec2::new(wall_width, wall_thickness),
@@ -101,6 +98,7 @@ fn setup_field(mut commands: Commands) {
     ));
     commands.spawn((
         Wall { half_size },
+        Team(0),
         Sprite::from_color(
             Color::srgb(0.3, 0.3, 0.3),
             Vec2::new(wall_width, wall_thickness),
@@ -128,7 +126,10 @@ fn setup_field(mut commands: Commands) {
     ));
 }
 
-fn toggle_cell(mut q_cell: Query<&mut Team, With<Cell>>, mut q_click: EventReader<CellClicked>) {
+pub fn toggle_cell(
+    mut q_cell: Query<&mut Team, With<Cell>>,
+    mut q_click: EventReader<CellClicked>,
+) {
     for event in q_click.read() {
         if let Ok(mut team) = q_cell.get_mut(event.cell) {
             team.0 = 1 - **team;
