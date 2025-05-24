@@ -1,10 +1,9 @@
 use bevy::prelude::*;
-use bevy_ggrs::prelude::*;
+use bevy_ggrs::{LocalPlayers, prelude::*};
 
 use super::{
     GameState,
     components::{Count, Team},
-    online::network_role::NetworkRole,
 };
 
 pub const FIELD_WIDTH: i32 = 10;
@@ -45,11 +44,10 @@ pub struct CellClicked {
     pub team: Team,
 }
 
-fn rotate(mut camera: Single<&mut Transform, With<Camera>>, role: Res<NetworkRole>) {
-    if matches!(*role, NetworkRole::Client) {
-        return;
+fn rotate(mut camera: Single<&mut Transform, With<Camera>>, local_players: Res<LocalPlayers>) {
+    if local_players.0.first().map(|x| *x == 1).unwrap_or(false) {
+        camera.rotate_z(std::f32::consts::PI);
     }
-    camera.rotate_z(std::f32::consts::PI);
 }
 
 fn setup_field(mut commands: Commands) {
