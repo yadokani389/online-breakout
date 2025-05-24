@@ -76,3 +76,15 @@ pub fn handle_respawning_balls(
         }
     }
 }
+
+#[allow(clippy::type_complexity)]
+pub fn despawn_stopped_balls(
+    mut commands: Commands,
+    q_ball: Query<(Entity, &Velocity), (With<Ball>, Without<RespawningBall>)>,
+) {
+    for (entity, velocity) in q_ball {
+        if velocity.0.length_squared() < 0.01 {
+            commands.entity(entity).despawn();
+        }
+    }
+}

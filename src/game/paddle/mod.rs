@@ -8,8 +8,8 @@ use bevy_ggrs::{LocalInputs, LocalPlayers, PlayerInputs, prelude::*};
 use super::{Config, components::Team, online::network_role::NetworkRole};
 use super::{GameState, field::Wall};
 
-const PADDLE_WIDTH: f32 = 100.0;
-const PADDLE_HEIGHT: f32 = 10.0;
+pub const PADDLE_WIDTH: f32 = 100.0;
+pub const PADDLE_HEIGHT: f32 = 10.0;
 const PADDLE_Y_POSITION: f32 = 450.0;
 
 const INPUT_LEFT: u8 = 1 << 0;

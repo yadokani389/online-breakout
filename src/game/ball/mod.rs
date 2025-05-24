@@ -4,13 +4,14 @@ use bevy_ggrs::prelude::*;
 
 use super::GameState;
 use super::components::Team;
-use super::field::{CellClicked, Wall, toggle_cell};
+use super::field::{CellClicked, Wall};
+use super::item::spawn_item;
 use super::paddle::{Paddle, move_paddles};
 
 mod respawn;
 
-const FIRST_BALL_SPEED: f32 = 300.0;
-const BALL_RADIUS: f32 = 10.0;
+pub const FIRST_BALL_SPEED: f32 = 300.0;
+pub const BALL_RADIUS: f32 = 10.0;
 
 pub struct BallPlugin;
 
@@ -24,10 +25,11 @@ impl Plugin for BallPlugin {
                     check_collision,
                     respawn::respawn_balls,
                     respawn::handle_respawning_balls,
+                    respawn::despawn_stopped_balls,
                 )
                     .chain()
                     .after(move_paddles)
-                    .before(toggle_cell)
+                    .before(spawn_item)
                     .run_if(in_state(GameState::InGame)),
             )
             .rollback_component_with_copy::<Ball>()
@@ -140,7 +142,7 @@ fn check_collision(
 
         // Check for cell collisions
         for (cell_entity, cell, cell_team, cell_transform) in &q_cell {
-            if cell_team != ball_team {
+            if cell_team == ball_team {
                 continue;
             }
             let closest_point = Aabb2d::new(cell_transform.translation.truncate(), cell.half_size)
@@ -156,7 +158,10 @@ fn check_collision(
                 let normal = diff.normalize();
                 velocity.0 = velocity.reflect(normal);
                 ball_transform.translation += (normal * (ball.radius - diff.length())).extend(0.);
-                events.write(CellClicked { cell: cell_entity });
+                events.write(CellClicked {
+                    cell: cell_entity,
+                    team: *ball_team,
+                });
                 continue 'ball;
             }
         }

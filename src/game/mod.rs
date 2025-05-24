@@ -6,6 +6,7 @@ use matchbox_socket::PeerId;
 mod ball;
 mod components;
 mod field;
+mod item;
 mod menu;
 mod online;
 mod paddle;
@@ -23,12 +24,25 @@ impl Plugin for GamePlugin {
             field::FieldPlugin,
             paddle::PaddlePlugin,
             online::OnlinePlugin,
+            item::ItemPlugin,
         ))
         .init_state::<GameState>()
         .add_systems(Startup, setup_graphics)
+        .add_systems(
+            GgrsSchedule,
+            despawn_out_of_bounds_entities.after(field::toggle_cell),
+        )
         .rollback_component_with_clone::<Transform>()
         .rollback_component_with_copy::<Team>();
     }
+}
+
+#[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
+enum GameState {
+    #[default]
+    Lobby,
+    Matchmaking,
+    InGame,
 }
 
 fn setup_graphics(mut commands: Commands) {
@@ -43,10 +57,10 @@ fn setup_graphics(mut commands: Commands) {
     ));
 }
 
-#[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
-enum GameState {
-    #[default]
-    Lobby,
-    Matchmaking,
-    InGame,
+fn despawn_out_of_bounds_entities(mut commands: Commands, query: Query<(Entity, &Transform)>) {
+    for (entity, transform) in query {
+        if 1200. < transform.translation.x.abs() || 1200. < transform.translation.y.abs() {
+            commands.entity(entity).despawn();
+        }
+    }
 }
