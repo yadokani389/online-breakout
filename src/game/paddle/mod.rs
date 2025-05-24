@@ -5,7 +5,7 @@ use bevy::{
 };
 use bevy_ggrs::{LocalInputs, LocalPlayers, PlayerInputs, prelude::*};
 
-use super::{Config, components::Team, online::network_role::NetworkRole};
+use super::{Config, components::Team};
 use super::{GameState, field::Wall};
 
 pub const PADDLE_WIDTH: f32 = 100.0;
@@ -66,7 +66,6 @@ fn read_local_inputs(
     touches: Res<Touches>,
     local_players: Res<LocalPlayers>,
     q_camera: Single<(&Camera, &GlobalTransform)>,
-    role: Res<NetworkRole>,
 ) {
     let mut local_inputs = HashMap::new();
     let (camera, camera_transform) = *q_camera;
@@ -92,7 +91,7 @@ fn read_local_inputs(
         }
 
         // Reverse input if the role is Host
-        if matches!(*role, NetworkRole::Host) {
+        if *handle == 1 {
             input = ((input & INPUT_LEFT != 0) as u8 * INPUT_RIGHT)
                 | ((input & INPUT_RIGHT != 0) as u8 * INPUT_LEFT);
         }
