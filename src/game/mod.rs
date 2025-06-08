@@ -38,6 +38,7 @@ impl Plugin for GamePlugin {
 }
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
+#[states(scoped_entities)]
 enum GameState {
     #[default]
     Lobby,

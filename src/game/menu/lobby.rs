@@ -19,18 +19,14 @@ impl Plugin for LobbyPlugin {
                 EguiContextPass,
                 show_textbox.run_if(in_state(GameState::Lobby)),
             )
-            .add_systems(Update, button_system.run_if(in_state(GameState::Lobby)))
-            .add_systems(OnExit(GameState::Lobby), despawn_lobby);
+            .add_systems(Update, button_system.run_if(in_state(GameState::Lobby)));
     }
 }
-
-#[derive(Component)]
-struct OnLobbyScreen;
 
 fn setup_lobby(mut commands: Commands) {
     commands
         .spawn((
-            OnLobbyScreen,
+            StateScoped(GameState::Lobby),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -88,7 +84,7 @@ fn button_system(
 fn spawn_button(parent: &mut ChildSpawnerCommands, role: NetworkRole) {
     parent
         .spawn((
-            OnLobbyScreen,
+            StateScoped(GameState::Lobby),
             Button,
             Pickable::default(),
             Node {
@@ -120,11 +116,5 @@ fn on_click<E: Debug + Clone + Reflect>(
         }
         commands.insert_resource(role);
         next_state.set(GameState::Matchmaking);
-    }
-}
-
-fn despawn_lobby(mut commands: Commands, query: Query<Entity, With<OnLobbyScreen>>) {
-    for entity in query {
-        commands.entity(entity).despawn();
     }
 }
