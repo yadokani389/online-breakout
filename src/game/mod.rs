@@ -10,6 +10,7 @@ mod item;
 mod menu;
 mod online;
 mod paddle;
+mod timer;
 
 type Config = bevy_ggrs::GgrsConfig<u8, PeerId>;
 
@@ -25,6 +26,7 @@ impl Plugin for GamePlugin {
             paddle::PaddlePlugin,
             online::OnlinePlugin,
             item::ItemPlugin,
+            timer::TimerPlugin,
         ))
         .init_state::<GameState>()
         .add_systems(Startup, setup_graphics)
@@ -44,6 +46,7 @@ enum GameState {
     Lobby,
     Matchmaking,
     InGame,
+    GameOver,
 }
 
 fn setup_graphics(mut commands: Commands) {
@@ -60,7 +63,7 @@ fn setup_graphics(mut commands: Commands) {
 
 fn despawn_out_of_bounds_entities(mut commands: Commands, query: Query<(Entity, &Transform)>) {
     for (entity, transform) in query {
-        if 1200. < transform.translation.x.abs() || 1200. < transform.translation.y.abs() {
+        if 1200. < transform.translation.x.abs() || 2000. < transform.translation.y.abs() {
             commands.entity(entity).despawn();
         }
     }
