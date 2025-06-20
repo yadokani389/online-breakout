@@ -16,14 +16,14 @@ pub struct FieldPlugin;
 impl Plugin for FieldPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<CellClicked>()
-            .add_systems(OnEnter(GameState::InGame), (rotate, setup_field))
+            .add_systems(OnEnter(GameState::InGame), setup_field)
             .add_systems(
                 GgrsSchedule,
                 toggle_cell.run_if(in_state(GameState::InGame)),
             )
             .add_systems(
                 Update,
-                update_cell_color.run_if(in_state(GameState::InGame)),
+                (rotate, update_cell_color).run_if(in_state(GameState::InGame)),
             );
     }
 }
@@ -44,10 +44,22 @@ pub struct CellClicked {
     pub team: Team,
 }
 
-fn rotate(mut camera: Single<&mut Transform, With<Camera>>, local_players: Res<LocalPlayers>) {
-    if local_players.0.first().map(|x| *x == 1).unwrap_or(false) {
+fn rotate(
+    mut camera: Single<&mut Transform, With<Camera>>,
+    local_players: Res<LocalPlayers>,
+    mut done: Local<bool>,
+) {
+    if *done {
+        return;
+    }
+    let Some(flag) = local_players.0.first().map(|x| *x == 1) else {
+        warn!("No local player found, cannot rotate camera.");
+        return;
+    };
+    if flag {
         camera.rotate_z(std::f32::consts::PI);
     }
+    *done = true;
 }
 
 fn setup_field(mut commands: Commands) {
