@@ -3,6 +3,7 @@ use bevy_egui::EguiPlugin;
 
 pub mod lobby;
 pub mod matchmaking;
+pub mod result;
 
 pub struct MenuPlugin;
 
@@ -14,6 +15,7 @@ impl Plugin for MenuPlugin {
             },
             lobby::LobbyPlugin,
             matchmaking::MatchmakingPlugin,
+            result::ResultPlugin,
         ));
     }
 }
