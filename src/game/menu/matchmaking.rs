@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContextPass, EguiContexts, egui};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::game::{
     GameState,
@@ -11,7 +11,7 @@ pub struct MatchmakingPlugin;
 impl Plugin for MatchmakingPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            EguiContextPass,
+            EguiPrimaryContextPass,
             show_text.run_if(in_state(GameState::Matchmaking)),
         );
     }
@@ -31,7 +31,7 @@ fn show_text(mut context: EguiContexts, iroh_id: Option<Res<IrohId>>, role: Res<
         "Connecting...".into()
     };
 
-    egui::CentralPanel::default().show(context.ctx_mut(), |ui| {
+    egui::CentralPanel::default().show(context.ctx_mut().unwrap(), |ui| {
         ui.horizontal_centered(|ui| {
             ui.allocate_ui_with_layout(
                 egui::vec2(ui.available_width(), 40.),

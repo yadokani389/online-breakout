@@ -38,7 +38,7 @@ impl Plugin for ItemPlugin {
                 .run_if(in_state(GameState::InGame)),
         )
         .rollback_component_with_copy::<Item>()
-        .add_event::<ItemCollected>();
+        .add_message::<ItemCollected>();
     }
 }
 
@@ -54,7 +54,7 @@ pub struct Item {
     item_type: ItemType,
 }
 
-#[derive(Event)]
+#[derive(Message)]
 struct ItemCollected {
     team: Team,
     item_type: ItemType,
@@ -62,7 +62,7 @@ struct ItemCollected {
 
 pub fn spawn_item(
     mut commands: Commands,
-    mut ev: EventReader<CellClicked>,
+    mut ev: MessageReader<CellClicked>,
     q_cell: Query<(&Transform, &Team), With<Cell>>,
     mut count: Local<Count>,
 ) {
@@ -102,7 +102,7 @@ fn check_paddle_collision(
     mut commands: Commands,
     q_items: Query<(Entity, &Item, &Team, &Transform)>,
     q_paddles: Query<(&Paddle, &Team, &Transform)>,
-    mut ev_collision: EventWriter<ItemCollected>,
+    mut ev_collision: MessageWriter<ItemCollected>,
 ) {
     for (item_entity, item, team, item_transform) in q_items {
         for (paddle, paddle_team, paddle_transform) in q_paddles {
@@ -130,7 +130,7 @@ fn check_paddle_collision(
 
 fn apply_item_effect(
     mut commands: Commands,
-    mut ev_collected: EventReader<ItemCollected>,
+    mut ev_collected: MessageReader<ItemCollected>,
     mut q_balls: Query<(&Ball, &Team, &Transform, &mut Velocity)>,
     mut q_paddles: Query<(&mut Paddle, &mut Mesh2d, &Team)>,
     mut meshes: ResMut<Assets<Mesh>>,

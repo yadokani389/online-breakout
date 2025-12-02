@@ -18,9 +18,7 @@ use n0_future::StreamExt;
 use serde::{Deserialize, Serialize};
 use web_time::Instant;
 
-use crate::game::online::direct_message::{
-    DIRECT_MESSAGE_ALPN, DirectMessageProtocol, send_direct_message,
-};
+use super::direct_message::{DIRECT_MESSAGE_ALPN, DirectMessageProtocol, send_direct_message};
 
 const GOSSIP_TOPIC_ID: TopicId = TopicId::from_bytes(*b"__online_breakout_iroh_gossip___");
 

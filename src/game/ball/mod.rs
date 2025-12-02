@@ -1,6 +1,7 @@
-use crate::game::field::Cell;
 use bevy::{math::bounding::Aabb2d, prelude::*};
 use bevy_ggrs::prelude::*;
+
+use crate::game::field::Cell;
 
 use super::GameState;
 use super::components::Team;
@@ -90,7 +91,7 @@ fn check_collision(
     q_cell: Query<(Entity, &Cell, &Team, &Transform), Without<Ball>>,
     q_wall: Query<(&Wall, &Transform, Option<&Team>), Without<Ball>>,
     q_paddle: Query<(&Paddle, &Team, &Transform), Without<Ball>>,
-    mut events: EventWriter<CellClicked>,
+    mut events: MessageWriter<CellClicked>,
 ) {
     'ball: for (ball_entity, ball, ball_team, mut ball_transform, mut velocity) in q_ball {
         let ball_pos = ball_transform.translation.truncate();

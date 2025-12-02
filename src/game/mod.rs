@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy::{camera::ScalingMode, prelude::*};
 use bevy_ggrs::prelude::*;
 use components::Team;
 use matchbox_socket::PeerId;

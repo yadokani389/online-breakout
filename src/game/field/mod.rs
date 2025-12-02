@@ -15,7 +15,7 @@ pub struct FieldPlugin;
 
 impl Plugin for FieldPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<CellClicked>()
+        app.add_message::<CellClicked>()
             .add_systems(OnEnter(GameState::InGame), setup_field)
             .add_systems(
                 GgrsSchedule,
@@ -38,7 +38,7 @@ pub struct Cell {
     pub half_size: Vec2,
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct CellClicked {
     pub cell: Entity,
     pub team: Team,
@@ -144,7 +144,7 @@ fn setup_field(mut commands: Commands) {
 
 pub fn toggle_cell(
     mut q_cell: Query<&mut Team, With<Cell>>,
-    mut q_click: EventReader<CellClicked>,
+    mut q_click: MessageReader<CellClicked>,
     mut count: Local<Count>,
 ) {
     for event in q_click.read() {

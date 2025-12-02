@@ -6,9 +6,9 @@ use bevy_wasm_tasks::Tasks;
 use iroh_gossip_signaller::IrohGossipSignallerBuilder;
 use matchbox_socket::{WebRtcSocket, WebRtcSocketBuilder};
 
-use crate::{args::Args, game::Config};
+use crate::args::Args;
 
-use super::GameState;
+use super::{Config, GameState};
 
 pub mod direct_message;
 pub mod iroh_gossip_signaller;

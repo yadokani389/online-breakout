@@ -20,7 +20,6 @@
     inputs@{
       nixpkgs,
       flake-parts,
-      rust-overlay,
       ...
     }:
 
@@ -53,22 +52,22 @@
 
           wasm-server-runner = rustPlatform.buildRustPackage rec {
             pname = "wasm-server-runner";
-            version = "1.0.0";
+            version = "1.0.1";
             src = pkgs.fetchFromGitHub {
               owner = "jakobhellermann";
               repo = pname;
               rev = "v${version}";
-              sha256 = "sha256-3ARVVA+W9IS+kpV8j5lL/z6/ZImDaA+m0iEEQ2mSiTw=";
+              sha256 = "sha256-GOyLtdXtwCdhs5DE4CqoFnlpOa4PpA3i4URg7Srf7U4=";
             };
-            cargoHash = "sha256-FrnCmfSRAePZuWLC1/iRJ87CwLtgWRpbk6nJLyQQIT8=";
+            cargoHash = "sha256-CBIqRIdYNFg1SP6Km4ypO0NhJGkQuxZrD1zOcRhUDdk=";
           };
 
           # This is an action to build to wasm
           # cc-wrapper is currently not designed with multi-target https://github.com/NixOS/nixpkgs/issues/395191
-          # and clang-19 does not have include https://github.com/NixOS/nixpkgs/issues/351962
+          # and clang-21 does not have include https://github.com/NixOS/nixpkgs/issues/351962
           # Someone please help me
           # -ffreestanding set __STDC_HOSTED__ to 0
-          cc = "clang-19 -ffreestanding -isystem ${pkgs.libclang.lib}/lib/clang/19/include -isystem ${pkgs.glibc.dev}/include";
+          cc = "clang-21 -ffreestanding -isystem ${pkgs.libclang.lib}/lib/clang/21/include -isystem ${pkgs.glibc.dev}/include";
 
           cargoDeps = rustPlatform.importCargoLock {
             lockFile = ./Cargo.lock;
@@ -137,7 +136,7 @@
 
               nativeBuildInputs = with pkgs; [
                 pkg-config
-                clang_19
+                clang_21
               ];
 
               buildInputs = with pkgs; [
@@ -165,7 +164,7 @@
             inherit (online-breakout) nativeBuildInputs buildInputs;
 
             packages = [
-              pkgs.clang_19
+              pkgs.clang_21
               pkgs.wasm-bindgen-cli
               wasm-server-runner
             ];
@@ -177,6 +176,7 @@
                 vulkan-loader
                 udev
                 alsa-lib
+                kdePackages.wayland
               ];
 
             shellHook = ''

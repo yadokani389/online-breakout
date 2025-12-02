@@ -70,7 +70,7 @@ pub fn handle_respawning_balls(
         transform.translation.x = paddle_transform.translation.x;
         transform.translation.y = paddle_transform.translation.y + relative_y * 5. * BALL_RADIUS;
 
-        if timer.0.finished() {
+        if timer.0.is_finished() {
             velocity.0 = Vec2::new(0., relative_y).normalize() * FIRST_BALL_SPEED;
             commands.entity(entity).remove::<RespawningBall>();
         }

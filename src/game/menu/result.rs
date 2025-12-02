@@ -73,7 +73,7 @@ fn setup_result_screen(
 
     // Main UI container
     commands.spawn((
-        StateScoped(GameState::GameOver),
+        DespawnOnExit(GameState::GameOver),
         Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),

@@ -58,7 +58,7 @@ fn check_victory_conditions(
 ) {
     timer.0.tick(time.delta());
 
-    if timer.0.finished() {
+    if timer.0.is_finished() {
         // Count blocks for each team
         let mut team0_blocks = 0;
         let mut team1_blocks = 0;
@@ -97,7 +97,7 @@ fn setup_timer_ui(mut commands: Commands) {
     // Simple timer bar at the bottom of the screen
     commands.spawn((
         TimerBarContainer,
-        StateScoped(GameState::InGame),
+        DespawnOnExit(GameState::InGame),
         Node {
             width: Val::Px(400.0),
             height: Val::Px(20.0),
@@ -109,11 +109,11 @@ fn setup_timer_ui(mut commands: Commands) {
             ..default()
         },
         BackgroundColor(Color::srgb(0.3, 0.3, 0.3)),
-        BorderColor(Color::WHITE),
+        BorderColor::all(Color::WHITE),
         ZIndex(1000),
         children![(
             TimerBar,
-            StateScoped(GameState::InGame),
+            DespawnOnExit(GameState::InGame),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),

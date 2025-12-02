@@ -1,10 +1,12 @@
 use std::fmt::Debug;
 
 use bevy::{color::palettes::css::GRAY, prelude::*};
-use bevy_egui::{EguiContextPass, EguiContexts, egui};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
-use crate::game::online::network_role::NetworkRole;
-use crate::{args::Args, game::GameState};
+use crate::{
+    args::Args,
+    game::{GameState, online::network_role::NetworkRole},
+};
 
 const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
@@ -16,7 +18,7 @@ impl Plugin for LobbyPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Lobby), setup_lobby)
             .add_systems(
-                EguiContextPass,
+                EguiPrimaryContextPass,
                 show_textbox.run_if(in_state(GameState::Lobby)),
             )
             .add_systems(Update, button_system.run_if(in_state(GameState::Lobby)));
@@ -26,7 +28,7 @@ impl Plugin for LobbyPlugin {
 fn setup_lobby(mut commands: Commands) {
     commands
         .spawn((
-            StateScoped(GameState::Lobby),
+            DespawnOnExit(GameState::Lobby),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -45,7 +47,7 @@ fn setup_lobby(mut commands: Commands) {
 fn show_textbox(mut context: EguiContexts, mut args: ResMut<Args>) {
     egui::Area::new(egui::Id::new(0))
         .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
-        .show(context.ctx_mut(), |ui| {
+        .show(context.ctx_mut().unwrap(), |ui| {
             ui.label("Enter Room ID:");
             ui.add(
                 egui::TextEdit::singleline(&mut args.iroh)
@@ -67,15 +69,15 @@ fn button_system(
         match *interaction {
             Interaction::Pressed => {
                 *color = PRESSED_BUTTON.into();
-                border_color.0 = GRAY.into();
+                border_color.set_all(GRAY);
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
-                border_color.0 = Color::WHITE;
+                border_color.set_all(Color::WHITE);
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();
-                border_color.0 = Color::BLACK;
+                border_color.set_all(Color::BLACK);
             }
         }
     }
@@ -84,7 +86,7 @@ fn button_system(
 fn spawn_button(parent: &mut ChildSpawnerCommands, role: NetworkRole) {
     parent
         .spawn((
-            StateScoped(GameState::Lobby),
+            DespawnOnExit(GameState::Lobby),
             Button,
             Pickable::default(),
             Node {
@@ -95,7 +97,7 @@ fn spawn_button(parent: &mut ChildSpawnerCommands, role: NetworkRole) {
                 align_items: AlignItems::Center,
                 ..default()
             },
-            BorderColor(Color::BLACK),
+            BorderColor::all(Color::BLACK),
             BorderRadius::MAX,
             BackgroundColor(NORMAL_BUTTON),
             children![(
@@ -107,9 +109,9 @@ fn spawn_button(parent: &mut ChildSpawnerCommands, role: NetworkRole) {
         .observe(on_click::<Pointer<Click>>(role));
 }
 
-fn on_click<E: Debug + Clone + Reflect>(
+fn on_click<E: Debug + Clone + Reflect + Event>(
     role: NetworkRole,
-) -> impl Fn(Trigger<E>, Commands, Res<Args>, ResMut<NextState<GameState>>) {
+) -> impl Fn(On<E>, Commands, Res<Args>, ResMut<NextState<GameState>>) {
     move |_ev, mut commands, args, mut next_state| {
         if matches!(role, NetworkRole::Client) && 64 != args.iroh.len() {
             return;
