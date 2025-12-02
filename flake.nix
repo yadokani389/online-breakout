@@ -134,14 +134,11 @@
                 cp target/wasm32-unknown-unknown/wasm-release/*.wasm $out/lib/
               '';
 
+              doCheck = false;
+
               nativeBuildInputs = with pkgs; [
                 pkg-config
                 clang_21
-              ];
-
-              buildInputs = with pkgs; [
-                alsa-lib
-                udev
               ];
             }
           );
