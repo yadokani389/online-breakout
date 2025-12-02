@@ -31,7 +31,7 @@ jobs:
 
       - name: Generate wasm bind
         run: |
-          nix run nixpkgs#wasm-bindgen-cli -- --out-name online-breakout \
+          nix develop -c wasm-bindgen --out-name online-breakout \
             --out-dir dist \
             --target web result/lib/online-breakout.wasm
 

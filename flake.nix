@@ -62,6 +62,20 @@
             cargoHash = "sha256-CBIqRIdYNFg1SP6Km4ypO0NhJGkQuxZrD1zOcRhUDdk=";
           };
 
+          wasm-bindgen-cli = pkgs.buildWasmBindgenCli rec {
+            src = pkgs.fetchCrate {
+              pname = "wasm-bindgen-cli";
+              version = "0.2.106";
+              hash = "sha256-M6WuGl7EruNopHZbqBpucu4RWz44/MSdv6f0zkYw+44=";
+            };
+
+            cargoDeps = rustPlatform.fetchCargoVendor {
+              inherit src;
+              inherit (src) pname version;
+              hash = "sha256-ElDatyOwdKwHg3bNH/1pcxKI7LXkhsotlDPQjiLHBwA=";
+            };
+          };
+
           # This is an action to build to wasm
           # cc-wrapper is currently not designed with multi-target https://github.com/NixOS/nixpkgs/issues/395191
           # and clang-21 does not have include https://github.com/NixOS/nixpkgs/issues/351962
@@ -162,7 +176,7 @@
 
             packages = [
               pkgs.clang_21
-              pkgs.wasm-bindgen-cli
+              wasm-bindgen-cli
               wasm-server-runner
             ];
 
