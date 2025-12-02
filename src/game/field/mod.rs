@@ -88,7 +88,7 @@ fn setup_field(mut commands: Commands) {
                                 Color::hsl(team.hue(), 0.8, 0.7),
                                 Vec2::splat(CELL_SIZE - CELL_THICKNESS)
                             ),
-                            Transform::IDENTITY,
+                            Transform::from_xyz(0., 0., 1.),
                         )],
                     ))
                     .add_rollback();
