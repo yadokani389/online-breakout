@@ -85,7 +85,7 @@ pub fn spawn_item(
                 Item { item_type },
                 ev.team,
                 Sprite::from_color(css::YELLOW, Vec2::splat(ITEM_SIZE)),
-                Transform::from_translation(cell_transform.translation),
+                Transform::from_translation(cell_transform.translation.with_z(7.)),
             ))
             .add_rollback();
     }
